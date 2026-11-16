@@ -41,9 +41,9 @@ SYSTEM_INSTRUCTION = """
 3. التمارين الرياضية: أجب عن أي لعبة أو تمرين رياضي واشرح أداءه الصحيح باحترافية.
 """
 
-# استخدام الموديل المستقر
+# استخدام الموديل الأحدث والأكثر استقراراً
 model = genai.GenerativeModel(
-    model_name="gemini-1.5-flash",
+    model_name="gemini-2.5-flash",
     system_instruction=SYSTEM_INSTRUCTION
 )
 
@@ -88,7 +88,6 @@ if app_mode == "🌐 الشات العام (بدون تسجيل)":
 
         with st.chat_message("assistant"):
             try:
-                # طريقة توليد محتوى مباشرة ومستقرة بدون تعقيد
                 response = model.generate_content(prompt)
                 st.markdown(response.text)
                 st.session_state.public_messages.append({"role": "assistant", "content": response.text})
