@@ -41,9 +41,9 @@ SYSTEM_INSTRUCTION = """
 3. التمارين الرياضية: أجب عن أي لعبة أو تمرين رياضي واشرح أداءه الصحيح باحترافية.
 """
 
-# استخدام الموديل الأحدث والأكثر استقراراً
+# تحديث اسم الموديل بناءً على طلب جوجل الإجباري
 model = genai.GenerativeModel(
-    model_name="gemini-2.5-flash",
+    model_name="gemini-3.8-flash",
     system_instruction=SYSTEM_INSTRUCTION
 )
 
