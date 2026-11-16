@@ -41,9 +41,9 @@ SYSTEM_INSTRUCTION = """
 3. التمارين الرياضية: أجب عن أي لعبة أو تمرين رياضي واشرح أداءه الصحيح باحترافية.
 """
 
-# تحديث اسم الموديل إلى الإصدار المطلوب (gemini-3.8-flash)
+# استخدام الموديل المستقر
 model = genai.GenerativeModel(
-    model_name="gemini-3.8-flash",
+    model_name="gemini-1.5-flash",
     system_instruction=SYSTEM_INSTRUCTION
 )
 
@@ -88,12 +88,12 @@ if app_mode == "🌐 الشات العام (بدون تسجيل)":
 
         with st.chat_message("assistant"):
             try:
-                chat_session = model.start_chat(history=[])
-                response = chat_session.send_message(prompt)
+                # طريقة توليد محتوى مباشرة ومستقرة بدون تعقيد
+                response = model.generate_content(prompt)
                 st.markdown(response.text)
                 st.session_state.public_messages.append({"role": "assistant", "content": response.text})
             except Exception as e:
-                st.error(f"حدث خطأ: {e}")
+                st.error(f"حدث خطأ في الاتصال بالذكاء الاصطناعي: {e}")
 
 # 2. بروفايل المتدرب
 elif app_mode == "🔐 بروفايل المتدرب (لوحة التحكم)":
