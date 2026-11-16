@@ -87,7 +87,7 @@ if app_mode == "🌐 الشات العام (بدون تسجيل)":
             else:
                 try:
                     chat_completion = client.chat.completions.create(
-                        model="llama-3.1-70b-versatile",  # تم التعديل هنا للموديل المستقر
+                        model="llama-3.3-70b-versatile",  # الموديل النشط والحديث
                         messages=[
                             {"role": "system", "content": SYSTEM_INSTRUCTION},
                             {"role": "user", "content": prompt}
@@ -152,7 +152,7 @@ elif app_mode == "🔐 بروفايل المتدرب (لوحة التحكم)":
                     else:
                         try:
                             chat_completion = client.chat.completions.create(
-                                model="llama-3.1-70b-versatile",  # تم التعديل هنا أيضاً
+                                model="llama-3.3-70b-versatile",  # الموديل النشط والحديث
                                 messages=[
                                     {"role": "system", "content": SYSTEM_INSTRUCTION},
                                     {"role": "user", "content": contextual_prompt}
