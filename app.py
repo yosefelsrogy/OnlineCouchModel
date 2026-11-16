@@ -9,7 +9,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# تنسيق CSS للواجهة (دعم اللغة العربية والخط العربي العريض)
+# تنسيق CSS للواجهة
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
@@ -30,10 +30,10 @@ try:
     GROQ_API_KEY = st.secrets["GROQ_API_KEY"]
     client = Groq(api_key=GROQ_API_KEY)
 except Exception as e:
-    st.error("⚠️ تنبيه للمطور: يرجى إضافة مفتاح GROQ_API_KEY في إعدادات Streamlit Secrets (الإعدادات السرية للموقع).")
+    st.error("⚠️ تنبيه للمطور: يرجى إضافة مفتاح GROQ_API_KEY في إعدادات Streamlit Secrets.")
     client = None
 
-# System Prompt للذكاء الاصطناعي (قواعد صارمة ولهجة مصرية ودودة)
+# System Prompt للذكاء الاصطناعي
 SYSTEM_INSTRUCTION = """
 أنت خبير تغذية معتمد ومدرب كمال أجسام احترافي، تتحدث باللهجة المصرية المبسطة والودودة والمحفزة للمتدربين.
 قواعدك الصارمة:
@@ -87,7 +87,7 @@ if app_mode == "🌐 الشات العام (بدون تسجيل)":
             else:
                 try:
                     chat_completion = client.chat.completions.create(
-                        model="llama-3.3-70b-versatile",
+                        model="llama-3.1-70b-versatile",  # تم التعديل هنا للموديل المستقر
                         messages=[
                             {"role": "system", "content": SYSTEM_INSTRUCTION},
                             {"role": "user", "content": prompt}
@@ -152,7 +152,7 @@ elif app_mode == "🔐 بروفايل المتدرب (لوحة التحكم)":
                     else:
                         try:
                             chat_completion = client.chat.completions.create(
-                                model="llama-3.3-70b-versatile",
+                                model="llama-3.1-70b-versatile",  # تم التعديل هنا أيضاً
                                 messages=[
                                     {"role": "system", "content": SYSTEM_INSTRUCTION},
                                     {"role": "user", "content": contextual_prompt}
