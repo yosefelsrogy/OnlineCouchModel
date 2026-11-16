@@ -25,12 +25,8 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# جلب مفتاح الـ API بطريقة آمنة من إعدادات الاستضافة (Secrets)
-try:
-    API_KEY = st.secrets["GEMINI_API_KEY"]
-    genai.configure(api_key=API_KEY)
-except Exception:
-    st.error("⚠️ تنبيه للمطور: يرجى إضافة مفتاح GEMINI_API_KEY في إعدادات Streamlit Secrets (الإعدادات السرية للموقع).")
+# التكوين المباشر بمفتاح الـ API الذي أرسلته
+genai.configure(api_key="AQ.Ab8RN6Lf8zaYwKRjusqKz3Q6ZAWXjwBAz03XlKBYxwRD0lIgXg")
 
 # System Prompt للذكاء الاصطناعي
 SYSTEM_INSTRUCTION = """
@@ -41,9 +37,9 @@ SYSTEM_INSTRUCTION = """
 3. التمارين الرياضية: أجب عن أي لعبة أو تمرين رياضي واشرح أداءه الصحيح باحترافية.
 """
 
-# تحديث اسم الموديل بناءً على طلب جوجل الإجباري
+# استخدام الموديل المستقر
 model = genai.GenerativeModel(
-    model_name="gemini-3.8-flash",
+    model_name="gemini-1.5-flash",
     system_instruction=SYSTEM_INSTRUCTION
 )
 
