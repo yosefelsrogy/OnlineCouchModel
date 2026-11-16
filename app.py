@@ -1,5 +1,5 @@
 import streamlit as st
-import google.generativeai as genai
+from groq import Groq
 
 # إعداد صفحة الموقع
 st.set_page_config(
@@ -9,7 +9,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# تنسيق CSS للواجهة
+# تنسيق CSS للواجهة (دعم اللغة العربية والخط العربي العريض)
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
@@ -25,10 +25,15 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# التكوين المباشر بمفتاح الـ API الذي أرسلته
-genai.configure(api_key="AQ.Ab8RN6Lf8zaYwKRjusqKz3Q6ZAWXjwBAz03XlKBYxwRD0lIgXg")
+# جلب مفتاح Groq API بأمان من إعدادات Streamlit Secrets
+try:
+    GROQ_API_KEY = st.secrets["GROQ_API_KEY"]
+    client = Groq(api_key=GROQ_API_KEY)
+except Exception as e:
+    st.error("⚠️ تنبيه للمطور: يرجى إضافة مفتاح GROQ_API_KEY في إعدادات Streamlit Secrets (الإعدادات السرية للموقع).")
+    client = None
 
-# System Prompt للذكاء الاصطناعي
+# System Prompt للذكاء الاصطناعي (قواعد صارمة ولهجة مصرية ودودة)
 SYSTEM_INSTRUCTION = """
 أنت خبير تغذية معتمد ومدرب كمال أجسام احترافي، تتحدث باللهجة المصرية المبسطة والودودة والمحفزة للمتدربين.
 قواعدك الصارمة:
@@ -37,13 +42,7 @@ SYSTEM_INSTRUCTION = """
 3. التمارين الرياضية: أجب عن أي لعبة أو تمرين رياضي واشرح أداءه الصحيح باحترافية.
 """
 
-# استخدام الموديل المستقر
-model = genai.GenerativeModel(
-    model_name="gemini-1.5-flash",
-    system_instruction=SYSTEM_INSTRUCTION
-)
-
-# القائمة الجانبية
+# القائمة الجانبية للتنقل بين أقسام التطبيق
 st.sidebar.title("🎮 الأقسام الرئيسية")
 app_mode = st.sidebar.radio("اختر القسم:", [
     "🌐 الشات العام (بدون تسجيل)", 
@@ -55,7 +54,7 @@ app_mode = st.sidebar.radio("اختر القسم:", [
 st.markdown("<h1 class='main-header'>💪 الكوتش الشخصي الذكي</h1>", unsafe_allow_html=True)
 st.markdown("<p class='sub-header'>مساعدك الاحترافي لتصميم الجداول، حساب السعرات، والإجابة على كل استفساراتك الرياضية.</p>", unsafe_allow_html=True)
 
-# قاعدة بيانات وهمية في الذاكرة
+# قاعدة بيانات وهمية في الذاكرة لتجربة المتدربين
 if 'users_db' not in st.session_state:
     st.session_state.users_db = {
         "أحمد": {
@@ -65,7 +64,7 @@ if 'users_db' not in st.session_state:
         }
     }
 
-# 1. الشات العام
+# 1. الشات العام (بدون تسجيل)
 if app_mode == "🌐 الشات العام (بدون تسجيل)":
     st.markdown("### 💬 اسأل الكوتش عن التغذية والتمارين")
     st.info("💡 هذا القسم متاح للجميع بدون تسجيل. اسأل عن الكرياتين، التمارين، أو السعرات بشكل عام.")
@@ -83,14 +82,25 @@ if app_mode == "🌐 الشات العام (بدون تسجيل)":
             st.markdown(prompt)
 
         with st.chat_message("assistant"):
-            try:
-                response = model.generate_content(prompt)
-                st.markdown(response.text)
-                st.session_state.public_messages.append({"role": "assistant", "content": response.text})
-            except Exception as e:
-                st.error(f"حدث خطأ في الاتصال بالذكاء الاصطناعي: {e}")
+            if client is None:
+                st.error("لم يتم تكوين اتصال الذكاء الاصطناعي بشكل صحيح.")
+            else:
+                try:
+                    chat_completion = client.chat.completions.create(
+                        model="llama-3.3-70b-versatile",
+                        messages=[
+                            {"role": "system", "content": SYSTEM_INSTRUCTION},
+                            {"role": "user", "content": prompt}
+                        ],
+                        temperature=0.7,
+                    )
+                    reply = chat_completion.choices[0].message.content
+                    st.markdown(reply)
+                    st.session_state.public_messages.append({"role": "assistant", "content": reply})
+                except Exception as e:
+                    st.error(f"حدث خطأ في الاتصال بالذكاء الاصطناعي: {e}")
 
-# 2. بروفايل المتدرب
+# 2. بروفايل المتدرب (لوحة التحكم الخاصة)
 elif app_mode == "🔐 بروفايل المتدرب (لوحة التحكم)":
     st.markdown("### 👤 بوابة المتدربين المسجلين")
     username = st.text_input("أدخل اسمك المسجل للوصول لبروفايلك وجدولك:")
@@ -137,16 +147,27 @@ elif app_mode == "🔐 بروفايل المتدرب (لوحة التحكم)":
                     الجدول الحالي: {user_data['diet_plan']}
                     طلب المتدرب: {user_prompt}
                     """
-                    try:
-                        response = model.generate_content(contextual_prompt)
-                        st.markdown(response.text)
-                        st.session_state[chat_key].append({"role": "assistant", "content": response.text})
-                    except Exception as e:
-                        st.error(f"خطأ: {e}")
+                    if client is None:
+                        st.error("لم يتم تكوين اتصال الذكاء الاصطناعي.")
+                    else:
+                        try:
+                            chat_completion = client.chat.completions.create(
+                                model="llama-3.3-70b-versatile",
+                                messages=[
+                                    {"role": "system", "content": SYSTEM_INSTRUCTION},
+                                    {"role": "user", "content": contextual_prompt}
+                                ],
+                                temperature=0.7,
+                            )
+                            reply = chat_completion.choices[0].message.content
+                            st.markdown(reply)
+                            st.session_state[chat_key].append({"role": "assistant", "content": reply})
+                        except Exception as e:
+                            st.error(f"خطأ: {e}")
         else:
             st.warning("⚠️ هذا الاسم غير مسجل. انتقل لقسم 'إنشاء حساب جديد' لتسجيل بروفايلك.")
 
-# 3. حاسبة السعرات السريعة
+# 3. حاسبة السعرات الدقيقة
 elif app_mode == "📊 حاسبة السعرات الدقيقة":
     st.markdown("### 🧮 حاسبة السعرات والماكروز (بدون هلوسة)")
     
