@@ -51,7 +51,7 @@ app_mode = st.sidebar.radio("اختر القسم:", [
     "➕ إنشاء حساب جديد"
 ])
 
-# أداة تشخيصية في القائمة الجانبية لمعرفة الموديلات المدعومة على مفتاحك لو ظهرت مشكلة
+# أداة تشخيصية في القائمة الجانبية لمعرفة الموديلات المتاحة
 with st.sidebar.expander("🛠️ فحص الموديلات المتاحة على مفتاحك"):
     if st.button("عرض الموديلات المدعومة"):
         if client:
@@ -61,7 +61,7 @@ with st.sidebar.expander("🛠️ فحص الموديلات المتاحة عل�
                 st.success("الموديلات المتاحة لحسابك:")
                 st.write(model_ids)
             except Exception as ex:
-                st.error(f番جاء الخطأ: {ex}")
+                st.error(f"حدث خطأ: {ex}")
         else:
             st.warning("يرجى ضبط مفتاح الـ API أولاً.")
 
@@ -80,7 +80,6 @@ if 'users_db' not in st.session_state:
 
 # دالة مساعدة لتنفيذ الطلب مع تجربة موديلات بديلة تلقائياً لو حدث خطأ
 def call_groq_chat(messages_list):
-    # قائمة الموديلات التي سيتم تجربتها بالترتيب تفادياً لأي خطأ
     models_to_try = [
         "mixtral-8x7b-32768", 
         "gemma2-9b-it", 
