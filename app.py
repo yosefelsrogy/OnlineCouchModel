@@ -42,7 +42,7 @@ SYSTEM_INSTRUCTION = """
 3. التمارين الرياضية: أجب عن أي لعبة أو تمرين رياضي واشرح أداءه الصحيح باحترافية.
 """
 
-# القائمة الجانبية للتنقل بين أقسام التطبيق
+# القائمة الجانبية للتنقل بين أقسام التطبيق ومعرفة الموديلات المتاحة
 st.sidebar.title("🎮 الأقسام الرئيسية")
 app_mode = st.sidebar.radio("اختر القسم:", [
     "🌐 الشات العام (بدون تسجيل)", 
@@ -50,6 +50,20 @@ app_mode = st.sidebar.radio("اختر القسم:", [
     "📊 حاسبة السعرات الدقيقة",
     "➕ إنشاء حساب جديد"
 ])
+
+# أداة تشخيصية في القائمة الجانبية لمعرفة الموديلات المدعومة على مفتاحك لو ظهرت مشكلة
+with st.sidebar.expander("🛠️ فحص الموديلات المتاحة على مفتاحك"):
+    if st.button("عرض الموديلات المدعومة"):
+        if client:
+            try:
+                models_response = client.models.list()
+                model_ids = [m.id for m in models_response.data]
+                st.success("الموديلات المتاحة لحسابك:")
+                st.write(model_ids)
+            except Exception as ex:
+                st.error(f番جاء الخطأ: {ex}")
+        else:
+            st.warning("يرجى ضبط مفتاح الـ API أولاً.")
 
 st.markdown("<h1 class='main-header'>💪 الكوتش الشخصي الذكي</h1>", unsafe_allow_html=True)
 st.markdown("<p class='sub-header'>مساعدك الاحترافي لتصميم الجداول، حساب السعرات، والإجابة على كل استفساراتك الرياضية.</p>", unsafe_allow_html=True)
@@ -63,6 +77,30 @@ if 'users_db' not in st.session_state:
             "diet_plan": "وجبة 1: 4 بيضات مسلوقين + رغيف بلدي\nوجبة 2: 150 جرام صدور فراخ + طبق أرز مصري\nوجبة 3: علبة تونة مصفاة + سلطة\nوجبة 4: 150 جرام جبنة قريش + سوداني"
         }
     }
+
+# دالة مساعدة لتنفيذ الطلب مع تجربة موديلات بديلة تلقائياً لو حدث خطأ
+def call_groq_chat(messages_list):
+    # قائمة الموديلات التي سيتم تجربتها بالترتيب تفادياً لأي خطأ
+    models_to_try = [
+        "mixtral-8x7b-32768", 
+        "gemma2-9b-it", 
+        "llama-3.1-8b-instant",
+        "llama-3.3-70b-versatile"
+    ]
+    
+    last_error = None
+    for mdl in models_to_try:
+        try:
+            completion = client.chat.completions.create(
+                model=mdl,
+                messages=messages_list,
+                temperature=0.7,
+            )
+            return completion.choices[0].message.content
+        except Exception as e:
+            last_error = e
+            continue
+    raise last_error
 
 # 1. الشات العام (بدون تسجيل)
 if app_mode == "🌐 الشات العام (بدون تسجيل)":
@@ -86,19 +124,15 @@ if app_mode == "🌐 الشات العام (بدون تسجيل)":
                 st.error("لم يتم تكوين اتصال الذكاء الاصطناعي بشكل صحيح.")
             else:
                 try:
-                    chat_completion = client.chat.completions.create(
-                        model="llama-3.3-70b-versatile",  # الموديل المعتمد والنشط حالياً
-                        messages=[
-                            {"role": "system", "content": SYSTEM_INSTRUCTION},
-                            {"role": "user", "content": prompt}
-                        ],
-                        temperature=0.7,
-                    )
-                    reply = chat_completion.choices[0].message.content
+                    full_messages = [
+                        {"role": "system", "content": SYSTEM_INSTRUCTION},
+                        {"role": "user", "content": prompt}
+                    ]
+                    reply = call_groq_chat(full_messages)
                     st.markdown(reply)
                     st.session_state.public_messages.append({"role": "assistant", "content": reply})
                 except Exception as e:
-                    st.error(f"حدث خطأ في الاتصال بالذكاء الاصطناعي: {e}")
+                    st.error(f"حدث خطأ نهائي في الاتصال بالذكاء الاصطناعي: {e}")
 
 # 2. بروفايل المتدرب (لوحة التحكم الخاصة)
 elif app_mode == "🔐 بروفايل المتدرب (لوحة التحكم)":
@@ -151,15 +185,11 @@ elif app_mode == "🔐 بروفايل المتدرب (لوحة التحكم)":
                         st.error("لم يتم تكوين اتصال الذكاء الاصطناعي.")
                     else:
                         try:
-                            chat_completion = client.chat.completions.create(
-                                model="llama-3.3-70b-versatile",  # الموديل المعتمد والنشط حالياً
-                                messages=[
-                                    {"role": "system", "content": SYSTEM_INSTRUCTION},
-                                    {"role": "user", "content": contextual_prompt}
-                                ],
-                                temperature=0.7,
-                            )
-                            reply = chat_completion.choices[0].message.content
+                            full_messages = [
+                                {"role": "system", "content": SYSTEM_INSTRUCTION},
+                                {"role": "user", "content": contextual_prompt}
+                            ]
+                            reply = call_groq_chat(full_messages)
                             st.markdown(reply)
                             st.session_state[chat_key].append({"role": "assistant", "content": reply})
                         except Exception as e:
