@@ -25,14 +25,12 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# -----------------------------------------------------------------
-# جلب مفتاح الـ API بطريقة آمنة وسرية من إعدادات الاستضافة (Secrets)
-# -----------------------------------------------------------------
+# جلب مفتاح الـ API بطريقة آمنة من إعدادات الاستضافة (Secrets)
 try:
     API_KEY = st.secrets["GEMINI_API_KEY"]
     genai.configure(api_key=API_KEY)
 except Exception:
-    st.error("⚠️ تنبيه للمطور: يرجى إضافة مفتاح GEMINI_API_KEY في إعدادات Streamlit Secrets (لوحة تحكم الموقع) ليعمل الذكاء الاصطناعي.")
+    st.error("⚠️ تنبيه للمطور: يرجى إضافة مفتاح GEMINI_API_KEY في إعدادات Streamlit Secrets (الإعدادات السرية للموقع).")
 
 # System Prompt للذكاء الاصطناعي
 SYSTEM_INSTRUCTION = """
@@ -43,12 +41,13 @@ SYSTEM_INSTRUCTION = """
 3. التمارين الرياضية: أجب عن أي لعبة أو تمرين رياضي واشرح أداءه الصحيح باحترافية.
 """
 
+# استخدام الموديل المدعوم رسمياً
 model = genai.GenerativeModel(
-    model_name="gemini-1.5-flash",
+    model_name="gemini-2.5-flash",
     system_instruction=SYSTEM_INSTRUCTION
 )
 
-# القائمة الجانبية (تمت إزالة خانة إدخال الـ API للمستخدم)
+# القائمة الجانبية
 st.sidebar.title("🎮 الأقسام الرئيسية")
 app_mode = st.sidebar.radio("اختر القسم:", [
     "🌐 الشات العام (بدون تسجيل)", 
